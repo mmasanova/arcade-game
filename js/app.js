@@ -32,7 +32,7 @@ class Enemy {
         const position = setEnemyPosition();
         const speed = setEnemySpeed();
 
-        this.x = -101;
+        this.x = -gameProperties.CELL_WIDTH;
         this.y = position.y;
         this.speed = speed;
     }
@@ -44,7 +44,9 @@ class Enemy {
 
 class Player {
     constructor() {
-        this.sprite = 'images/char-boy.pngs'
+        this.sprite = 'images/char-boy.png'
+        this.x = 2 * gameProperties.CELL_WIDTH;
+        this.y = 4 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
     }
 
     update(dt) {
@@ -52,17 +54,59 @@ class Player {
     }
 
     render() {
-
+        ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     }
 
-    handleInput() {
+    handleInput(direction) {
+        let newY = this.y;
+        let newX = this.x;
+        const maxY = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
+        const maxX = 4 * gameProperties.CELL_WIDTH;
 
+        switch (direction) {
+            case 'up':
+                newY -= gameProperties.CELL_HEIGHT;
+                break;
+
+            case 'down':
+                newY += gameProperties.CELL_HEIGHT;
+                break;
+
+            case 'left':
+                newX -= gameProperties.CELL_WIDTH;
+                break;
+
+            case 'right':
+                newX += gameProperties.CELL_WIDTH;
+                break;
+
+            default:
+                break;
+        }
+
+        if (newY < -gameProperties.SPRITE_PADDING) newY = -gameProperties.SPRITE_PADDING;
+        if (newY > maxY) newY = maxY;
+        if (newX < 0) newX = 0;
+        if (newX > maxX) newX = maxX;
+
+        this.y = newY;
+        this.x = newX;
     }
 }
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
+
+const gameProperties = (function() {
+    const properties = {
+        CELL_WIDTH: 101,
+        CELL_HEIGHT: 83,
+        SPRITE_PADDING: 20
+    };
+
+    return properties;
+})();
 
 let allEnemies = [];
 const enemyPositions = [];
@@ -87,8 +131,8 @@ function setEnemyPosition() {
     while (!positionFound) {
         const col = Math.floor(Math.random() * 4);
         const row = Math.floor(Math.random() * 3) + 1;
-        const x = col * 101;
-        const y = (row * 83) - 20;
+        const x = col * gameProperties.CELL_WIDTH;
+        const y = (row * gameProperties.CELL_HEIGHT) - 20;
         const existingPosition = allEnemies.find((enemy) => enemy.x === x && enemy.y === y);
 
         if (existingPosition === undefined) {
