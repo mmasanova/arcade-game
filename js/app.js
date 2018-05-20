@@ -3,12 +3,12 @@ class Enemy {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
 
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    constructor(col = 0, row = 1, speed = 40) {
+    constructor(x = 0, y = 63, speed = 40) {
+        // The image/sprite for our enemies, this uses
+        // a helper we've provided to easily load images
         this.sprite = 'images/enemy-bug.png';
-        this.x = col * 101;
-        this.y = (row * 83) - 20;
+        this.x = x;
+        this.y = y;
         this.speed = speed;
     }
 
@@ -18,11 +18,23 @@ class Enemy {
         // You should multiply any movement by the dt parameter
         // which will ensure the game runs at the same speed for
         // all computers.
+        this.x = this.x + (this.speed * dt);
+
+        if (this.x > ctx.canvas.clientWidth) this.reset();
     }
 
     // Draw the enemy on the screen, required method for game
     render() {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    }
+
+    reset() {
+        const position = setEnemyPosition();
+        const speed = setEnemySpeed();
+
+        this.x = -101;
+        this.y = position.y;
+        this.speed = speed;
     }
 };
 
@@ -53,34 +65,44 @@ class Player {
 // Place the player object in a variable called player
 
 let allEnemies = [];
-
+const enemyPositions = [];
 const player = new Player();
+
 createEnemies();
 
 function createEnemies() {
-    const enemyPositions = [];
-
     for (let enemyX = 0; enemyX < 3; enemyX++) {
-        let positionFound = false;
-        let position;
-        const speed = Math.floor(Math.random() * 181) + 50;
+        const speed = setEnemySpeed();
+        const position = setEnemyPosition();
+        const enemy = new Enemy(position.x, position.y, speed);
 
-        while (!positionFound) {
-            const col = Math.floor(Math.random() * 4);
-            const row = Math.floor(Math.random() * 3) + 1;
-            const existingPosition = enemyPositions.find((pos) => pos.col === col && pos.row === row)
-
-            position = {col, row};
-
-            if (existingPosition === undefined) {
-                enemyPositions.push(position);
-                positionFound = true;
-            }
-        }
-        
-        const enemy = new Enemy(position.col, position.row, speed);
         allEnemies.push(enemy);
     }
+}
+
+function setEnemyPosition() {
+    let positionFound = false;
+    let position;
+
+    while (!positionFound) {
+        const col = Math.floor(Math.random() * 4);
+        const row = Math.floor(Math.random() * 3) + 1;
+        const x = col * 101;
+        const y = (row * 83) - 20;
+        const existingPosition = allEnemies.find((enemy) => enemy.x === x && enemy.y === y);
+
+        if (existingPosition === undefined) {
+            position = {x, y};
+            positionFound = true;
+        }
+    }
+
+    return position;
+}
+
+function setEnemySpeed() {
+    const speed = Math.floor(Math.random() * 181) + 50;
+    return speed;
 }
 
 
