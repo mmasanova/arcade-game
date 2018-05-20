@@ -46,7 +46,7 @@ class Player {
     constructor() {
         this.sprite = 'images/char-boy.png'
         this.x = 2 * gameProperties.CELL_WIDTH;
-        this.y = 4 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
+        this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
     }
 
     update(dt) {
