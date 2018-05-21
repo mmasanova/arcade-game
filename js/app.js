@@ -7,8 +7,10 @@ class Enemy {
         // The image/sprite for our enemies, this uses
         // a helper we've provided to easily load images
         this.sprite = 'images/enemy-bug.png';
+        this.width = 99;
+        this.padding = 1;
         this.setSpeed();
-        this.setPosition();
+        this.setPosition(true);
     }
 
     // Update the enemy's position, required method for game
@@ -25,28 +27,43 @@ class Enemy {
     // Draw the enemy on the screen, required method for game
     render() {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+        this.detectCollision();
     }
 
+    /**
+    * @description Resets enemy's position and speed
+    */
     reset() {
         this.setSpeed();
-        this.setPosition(true);
+        this.setPosition();
     }
 
+    /**
+    * @description Sets enemy's speed to a new random speed
+    */
     setSpeed() {
         this.speed = Math.floor(Math.random() * 301) + 150;
     }
 
-    setPosition(reset = false) {
+    /**
+    * @description Sets enemy's position to a new random unique position
+    * @param {boolean} setInitialPosition - enemy is being initialised, the x position needs to be random and unique
+    */
+    setPosition(setInitialPosition = false) {
         let positionFound = false;
         let position;
 
         while (!positionFound) {
-            const col = Math.floor(Math.random() * 4);
+            let x;
             const row = Math.floor(Math.random() * 3) + 1;
-            let x = col * gameProperties.CELL_WIDTH;
-            const y = (row * gameProperties.CELL_HEIGHT) - 20;
+            const y = (row * gameProperties.CELL_HEIGHT) - gameProperties.SPRITE_PADDING;
 
-            if (reset) x = -gameProperties.CELL_WIDTH;
+            if (setInitialPosition) {
+                const col = Math.floor(Math.random() * 4);
+                x = col * gameProperties.CELL_WIDTH;
+            } else {
+                x = -gameProperties.CELL_WIDTH;
+            }
 
             const existingPosition = allEnemies.find((enemy) => enemy.x === x && enemy.y === y);
 
@@ -57,17 +74,51 @@ class Enemy {
             }
         }
     }
+
+    /**
+    * @description Detects collisions between enemies and player
+    */
+    detectCollision() {
+        const OVERLAP_TOLERANCE = 4;
+        const minX = player.x + player.padding + OVERLAP_TOLERANCE;
+        const maxX = player.x + player.padding + player.width - OVERLAP_TOLERANCE;
+        const thisRight = this.x + this.padding + this.width;
+        const thisLeft = this.x;
+
+        if (this.y === player.y) {
+            let collision = false;
+
+            // enemy's nose touched player
+            if (thisRight >= minX && thisRight <= maxX) {
+                collision = true;
+            }
+
+            // enemy's tail touched player
+            if (thisLeft <= maxX && thisLeft >= minX) {
+                collision = true;
+            }
+
+            if (collision) {
+                // let animation finish and reset player
+                setTimeout(function() {
+                    player.reset();
+                }, 60);
+            }
+        }
+    }
 };
 
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
 
+// Main Player
 class Player {
     constructor() {
         this.sprite = 'images/char-boy.png'
-        this.x = 2 * gameProperties.CELL_WIDTH;
-        this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
+        this.width = 65;
+        this.padding = 18;
+        this.reset();
     }
 
     update(dt) {
@@ -112,6 +163,11 @@ class Player {
 
         this.y = newY;
         this.x = newX;
+    }
+
+    reset() {
+        this.x = 2 * gameProperties.CELL_WIDTH;
+        this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
     }
 }
 
