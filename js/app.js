@@ -3,13 +3,12 @@ class Enemy {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
 
-    constructor(x = 0, y = 63, speed = 40) {
+    constructor() {
         // The image/sprite for our enemies, this uses
         // a helper we've provided to easily load images
         this.sprite = 'images/enemy-bug.png';
-        this.x = x;
-        this.y = y;
-        this.speed = speed;
+        this.setSpeed();
+        this.setPosition();
     }
 
     // Update the enemy's position, required method for game
@@ -29,12 +28,34 @@ class Enemy {
     }
 
     reset() {
-        const position = setEnemyPosition();
-        const speed = setEnemySpeed();
+        this.setSpeed();
+        this.setPosition(true);
+    }
 
-        this.x = -gameProperties.CELL_WIDTH;
-        this.y = position.y;
-        this.speed = speed;
+    setSpeed() {
+        this.speed = Math.floor(Math.random() * 301) + 150;
+    }
+
+    setPosition(reset = false) {
+        let positionFound = false;
+        let position;
+
+        while (!positionFound) {
+            const col = Math.floor(Math.random() * 4);
+            const row = Math.floor(Math.random() * 3) + 1;
+            let x = col * gameProperties.CELL_WIDTH;
+            const y = (row * gameProperties.CELL_HEIGHT) - 20;
+
+            if (reset) x = -gameProperties.CELL_WIDTH;
+
+            const existingPosition = allEnemies.find((enemy) => enemy.x === x && enemy.y === y);
+
+            if (existingPosition === undefined) {
+                this.x = x;
+                this.y = y;
+                positionFound = true;
+            }
+        }
     }
 };
 
@@ -109,46 +130,12 @@ const gameProperties = (function() {
 })();
 
 let allEnemies = [];
-const enemyPositions = [];
 const player = new Player();
 
-createEnemies();
-
-function createEnemies() {
-    for (let enemyX = 0; enemyX < 3; enemyX++) {
-        const speed = setEnemySpeed();
-        const position = setEnemyPosition();
-        const enemy = new Enemy(position.x, position.y, speed);
-
-        allEnemies.push(enemy);
-    }
+for (let enemyX = 0; enemyX < 3; enemyX++) {
+    const enemy = new Enemy();
+    allEnemies.push(enemy);
 }
-
-function setEnemyPosition() {
-    let positionFound = false;
-    let position;
-
-    while (!positionFound) {
-        const col = Math.floor(Math.random() * 4);
-        const row = Math.floor(Math.random() * 3) + 1;
-        const x = col * gameProperties.CELL_WIDTH;
-        const y = (row * gameProperties.CELL_HEIGHT) - 20;
-        const existingPosition = allEnemies.find((enemy) => enemy.x === x && enemy.y === y);
-
-        if (existingPosition === undefined) {
-            position = {x, y};
-            positionFound = true;
-        }
-    }
-
-    return position;
-}
-
-function setEnemySpeed() {
-    const speed = Math.floor(Math.random() * 181) + 50;
-    return speed;
-}
-
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
