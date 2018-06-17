@@ -23,7 +23,7 @@ canvas {
 
 .popup {
     position: absolute;
-    top: 4em;
+    top: 10em;
     left: 0;
     right: 0;
     margin: auto;
@@ -44,7 +44,7 @@ canvas {
 
 #set-player-sprite {
     display: block;
-    margin: 1em auto;
+    margin: 1em auto 2em auto;
     width: 2.5em;
     height: 2.5em;
 }

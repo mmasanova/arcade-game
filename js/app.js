@@ -119,9 +119,34 @@ class Player {
         this.width = 65;
         this.padding = 18;
         this.reset();
+        this.won = false
+        this.jumpMinY;
+        this.jumpMaxY;
+        this.direction = 'up'
     }
 
     update(dt) {
+        if (this.won) this.jump(dt);
+    }
+
+    jump(dt) {
+        if (this.jumpMinY === undefined) {
+            this.jumpMinY = this.y;
+            this.jumpMaxY = this.y + 10;
+        }
+
+        if (player.y < this.jumpMaxY && this.direction === 'up') {
+            player.y = player.y + (70 * dt);
+        } else {
+            this.direction = 'down';
+        }
+
+
+        if (this.direction === 'down' && player.y > this.jumpMinY) {
+            player.y = player.y - (70 * dt);
+        } else {
+            this.direction = 'up';
+        }
     }
 
     render() {
@@ -164,11 +189,33 @@ class Player {
 
         this.y = newY;
         this.x = newX;
+        this.checkWin();
+    }
+
+    checkWin() {
+        if (this.y < 0) {
+            this.won = true;
+
+            setTimeout(function() {
+                const content = document.createElement('text');
+                content.innerText = 'Congratulations you won!';
+
+                const popup = new Popup({ 
+                    title: 'You Won!', 
+                    content: content,
+                    closeCallback: function() {
+                        player.reset();
+                    }
+                });
+                popup.display();
+            }, 100);
+        }
     }
 
     reset() {
         this.x = 2 * gameProperties.CELL_WIDTH;
         this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
+        this.won = false;
     }
 
     setCharacter(sprite = 'images/char-boy.png') {
@@ -177,7 +224,7 @@ class Player {
 }
 
 class Popup {
-    constructor({width = 300, height = 300, id = 'popup', title = 'Title', content = '', closeCallback} = {}) {
+    constructor({width = 300, height = 'auto', id = 'popup', title = 'Title', content = '', closeCallback} = {}) {
         this.id = id;
         this.width = width + 'px';
         this.height = height + 'px';
