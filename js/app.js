@@ -122,7 +122,6 @@ class Player {
     }
 
     update(dt) {
-
     }
 
     render() {
@@ -130,6 +129,8 @@ class Player {
     }
 
     handleInput(direction) {
+        if (gameProperties.popupVisible) return;
+
         let newY = this.y;
         let newX = this.x;
         const maxY = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
@@ -169,6 +170,130 @@ class Player {
         this.x = 2 * gameProperties.CELL_WIDTH;
         this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
     }
+
+    setCharacter(sprite = 'images/char-boy.png') {
+        this.sprite = sprite;
+    }
+}
+
+class Popup {
+    constructor({width = 300, height = 300, id = 'popup', title = 'Title', content = '', closeCallback} = {}) {
+        this.id = id;
+        this.width = width + 'px';
+        this.height = height + 'px';
+        this.title = title;
+        this.content = content;
+        this.closeCallback = closeCallback
+    }
+
+    display() {
+        const thisPopup = this;
+        const popupWrapper = document.createElement('div');
+        popupWrapper.id = 'popup-wrapper';
+        popupWrapper.className = 'popup-wrapper';
+        popupWrapper.style.zIndex = 0;
+        // popupWrapper.onclick = function() {
+        //     thisPopup.close();
+        // }
+
+        const popup = document.createElement('div');
+        popup.id = this.id;
+        popup.style.width = this.width;
+        popup.style.height = this.height;
+        popup.style.zIndex = 1;
+        popup.className = 'popup';
+
+        const title = document.createElement('h3');
+        title.innerText = this.title;
+        popup.append(title);
+
+        const ok = document.createElement('button');
+        ok.innerText = 'OK';
+        ok.id = 'set-player-sprite';
+        ok.className = 'btn btn-raised';
+        ok.addEventListener('click', function() {
+            if (typeof thisPopup.closeCallback === 'function') thisPopup.closeCallback();
+            thisPopup.close();
+        });
+
+        console.log(this.content, '....');
+
+        popup.append(this.content);
+        popup.append(ok);
+        popupWrapper.append(popup);
+        document.body.append(popupWrapper);
+        gameProperties.popupVisible = true;
+    }
+
+    close() {
+        document.getElementById(this.id).remove();
+        document.getElementById('popup-wrapper').remove();
+        gameProperties.popupVisible = false;
+    }
+}
+
+class CharacterSwitch {
+    constructor() {
+        this.sprites = [
+            'images/char-boy.png',
+            'images/char-cat-girl.png',
+            'images/char-horn-girl.png',
+            'images/char-pink-girl.png',
+            'images/char-princess-girl.png'
+        ];
+
+        const documentFragment = document.createDocumentFragment();
+        const thisSwitch = this;
+
+        const prev = document.createElement('button');
+        prev.innerText = '<';
+        prev.className = 'character-switch-control';
+        prev.addEventListener('click', function(event) {
+            thisSwitch.switchCharacter(true);
+            event.stopPropagation();
+        });
+
+        const container = document.createElement('div');
+        container.id = 'character-container';
+        container.style.display = 'inline';
+
+        const img = Resources.get(this.sprites[0]);
+        img.style = 'margin-top: -3em;';
+        container.append(img);
+
+        const next = document.createElement('button');
+        next.innerText = '>';
+        next.className = 'character-switch-control';
+        next.addEventListener('click', function(event) {
+            thisSwitch.switchCharacter();
+            event.stopPropagation();
+        });
+
+        documentFragment.append(prev);
+        documentFragment.append(container);
+        documentFragment.append(next);
+
+        this.documentFragment = documentFragment;
+        this.container = container;
+        this.imageIndex = 0;
+    }
+
+    switchCharacter(previous) {
+        if (previous) {
+            this.imageIndex -= 1;
+        } else {
+            this.imageIndex += 1;
+        }
+
+        if (this.imageIndex === this.sprites.length) this.imageIndex = 0;
+        if (this.imageIndex === -1) this.imageIndex = this.sprites.length - 1;
+
+        let newImg = Resources.get(this.sprites[this.imageIndex]);
+        newImg.style = 'margin-top: -3em;';
+        const img = this.container.getElementsByTagName('img')[0];
+        img.remove();
+        this.container.append(newImg);
+    }
 }
 
 // Now instantiate your objects.
@@ -179,7 +304,8 @@ const gameProperties = (function() {
     const properties = {
         CELL_WIDTH: 101,
         CELL_HEIGHT: 83,
-        SPRITE_PADDING: 20
+        SPRITE_PADDING: 20,
+        popupVisible: false
     };
 
     return properties;
@@ -192,6 +318,28 @@ for (let enemyX = 0; enemyX < 3; enemyX++) {
     const enemy = new Enemy();
     allEnemies.push(enemy);
 }
+
+const header = document.createElement('div');
+header.id = 'header';
+
+const btn = document.createElement('button');
+btn.id = 'changeCharacter';
+btn.innerText = 'Change Character';
+btn.className = 'btn btn-raised';
+btn.addEventListener('click', function() {
+    const characterSwitch = new CharacterSwitch();
+    const popup = new Popup({ 
+        title: 'Change Character', 
+        content: characterSwitch.documentFragment,
+        closeCallback: function() {
+            player.setCharacter(characterSwitch.sprites[characterSwitch.imageIndex]);
+        }
+    });
+    popup.display();
+});
+
+header.append(btn);
+document.body.prepend(header);
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
