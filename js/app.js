@@ -1,8 +1,11 @@
+
+/**
+* @description Represents an enemy
+* @constructor
+*/
+
 // Enemies our player must avoid
 class Enemy {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-
     constructor() {
         // The image/sprite for our enemies, this uses
         // a helper we've provided to easily load images
@@ -13,18 +16,20 @@ class Enemy {
         this.setPosition(true);
     }
 
-    // Update the enemy's position, required method for game
-    // Parameter: dt, a time delta between ticks
+    /**
+    * @description Update the enemy's position, multiply any movement
+    * by the dt parameter which will ensure the game runs at the same speed for all computers.
+    * @param {number} dt - A time delta between ticks
+    */
     update(dt) {
-        // You should multiply any movement by the dt parameter
-        // which will ensure the game runs at the same speed for
-        // all computers.
         this.x = this.x + (this.speed * dt);
 
         if (this.x > ctx.canvas.clientWidth) this.reset();
     }
 
-    // Draw the enemy on the screen, required method for game
+    /**
+    * @description Draws the enemy on the screen
+    */
     render() {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
         this.detectCollision();
@@ -59,9 +64,11 @@ class Enemy {
             const y = (row * gameProperties.CELL_HEIGHT) - gameProperties.SPRITE_PADDING;
 
             if (setInitialPosition) {
+                // Calculate random position
                 const col = Math.floor(Math.random() * 4);
                 x = col * gameProperties.CELL_WIDTH;
             } else {
+                // Set position so the enemy enters the screen on left again
                 x = -gameProperties.CELL_WIDTH;
             }
 
@@ -88,18 +95,18 @@ class Enemy {
         if (this.y === player.y) {
             let collision = false;
 
-            // enemy's nose touched player
+            // Enemy's nose touched player
             if (thisRight >= minX && thisRight <= maxX) {
                 collision = true;
             }
 
-            // enemy's tail touched player
+            // Enemy's tail touched player
             if (thisLeft <= maxX && thisLeft >= minX) {
                 collision = true;
             }
 
             if (collision) {
-                // let animation finish and reset player
+                // Let animation finish and reset player
                 setTimeout(function() {
                     player.reset();
                 }, 60);
@@ -108,27 +115,38 @@ class Enemy {
     }
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+/**
+* @description Represents the main player
+* @constructor
+*/
 
-// Main Player
 class Player {
     constructor() {
         this.sprite = 'images/char-boy.png'
         this.width = 65;
         this.padding = 18;
         this.reset();
-        this.won = false
+        this.won = false;
         this.jumpMinY;
         this.jumpMaxY;
-        this.direction = 'up'
+        this.direction = 'up';
     }
 
+    /**
+    * @description Update anything that may change on game tick, multiply any movement
+    * by the dt parameter which will ensure the game runs at the same speed for all computers.
+    * @param {number} dt - A time delta between ticks
+    */
     update(dt) {
+        // Check if user won the game and run the winning jump if they did
         if (this.won) this.jump(dt);
     }
 
+    /**
+    * @description Makes the player jump up and down continuously, multiply any movement
+    * by the dt parameter which will ensure the game runs at the same speed for all computers.
+    * @param {number} dt - A time delta between ticks
+    */
     jump(dt) {
         if (this.jumpMinY === undefined) {
             this.jumpMinY = this.y;
@@ -149,10 +167,18 @@ class Player {
         }
     }
 
+    /**
+    * @description Draws the player on the screen
+    */
     render() {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     }
 
+    /**
+    * @description Handles any input from user and moves the player accordingly
+    * @param {string} direction - Direction in which player has moved. This 
+    * is calculated within the event listener which calls this function
+    */
     handleInput(direction) {
         if (gameProperties.popupVisible) return;
 
@@ -189,9 +215,15 @@ class Player {
 
         this.y = newY;
         this.x = newX;
+
+        // Check if player moved into the 'win' region on the other side of the road
         this.checkWin();
     }
 
+    /**
+    * @description Checks the player's y position to see if he crossed road, sets the won flag
+    * and displays the winning popup
+    */
     checkWin() {
         if (this.y < 0) {
             this.won = true;
@@ -207,17 +239,29 @@ class Player {
                         player.reset();
                     }
                 });
+
                 popup.display();
             }, 100);
         }
     }
 
+
+    /**
+    * @description Resets player to initial position and clears the won flag
+    */
     reset() {
         this.x = 2 * gameProperties.CELL_WIDTH;
         this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
         this.won = false;
     }
 
+
+    /**
+    * @description Sets player's sprite
+    * @param {string} sprite - image path for the player character, 
+    * this uses the helper class for cached images in resources.js and 
+    * should match one of the strings cached there
+    */
     setCharacter(sprite = 'images/char-boy.png') {
         this.sprite = sprite;
     }
