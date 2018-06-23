@@ -219,27 +219,34 @@ class Player {
     }
 
     /**
-    * @description Checks the player's y position to see if he crossed road, sets the won flag
-    * and displays the winning popup
+    * @description Checks the player's y position to see if he crossed road, sets new game level or 
+    * sets the won flag and displays the winning popup
     */
     checkWin() {
         if (this.y < 0) {
-            this.won = true;
+            if (gameProperties.level === gameProperties.maxLevel) {
+                this.won = true;
 
-            setTimeout(function() {
-                const content = document.createElement('text');
-                content.innerText = 'Congratulations you won!';
+                setTimeout(function() {
+                    const content = document.createElement('text');
+                    content.innerText = 'Congratulations you won!';
 
-                const popup = new Popup({ 
-                    title: 'You Won!', 
-                    content: content,
-                    closeCallback: function() {
-                        player.reset();
-                    }
-                });
+                    const popup = new Popup({ 
+                        title: 'You Won!', 
+                        content: content,
+                        closeCallback: function() {
+                            player.reset();
+                        }
+                    });
 
-                popup.display();
-            }, 100);
+                    popup.display();
+                }, 100);
+            } else {
+                gameProperties.level += 1;
+                const levelIndicator = document.getElementById('game-level-indicator');
+                levelIndicator.innerText = 'Level ' + gameProperties.level;
+                player.reset();
+            }
         }
     }
 
@@ -429,9 +436,15 @@ function displayGameHeader() {
 
         popup.display();
     });
-
     header.append(btn);
-    document.body.prepend(header);
+
+    const level = document.createElement('h2');
+    level.innerText = 'Level ' + gameProperties.level;
+    level.id = 'game-level-indicator';
+    header.append(level);
+
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    canvasWrapper.parentNode.insertBefore(header, canvasWrapper);
 }
 
 // Game preparation
@@ -442,7 +455,9 @@ const gameProperties = (function() {
         CELL_WIDTH: 101,
         CELL_HEIGHT: 83,
         SPRITE_PADDING: 20,
-        popupVisible: false
+        popupVisible: false,
+        level: 1,
+        maxLevel: 3
     };
 
     return properties;
@@ -473,5 +488,5 @@ document.addEventListener('keyup', function(e) {
     player.handleInput(allowedKeys[e.keyCode]);
 });
 
-// Display the game header
-displayGameHeader();
+// Display the game header when page loads
+document.addEventListener("DOMContentLoaded", displayGameHeader);

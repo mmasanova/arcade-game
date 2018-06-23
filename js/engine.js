@@ -26,7 +26,11 @@ var Engine = (function(global) {
 
     canvas.width = 505;
     canvas.height = 606;
-    doc.body.appendChild(canvas);
+    const canvasWrapper = doc.createElement('div');
+    canvasWrapper.id = 'canvas-wrapper';
+
+    canvasWrapper.appendChild(canvas);
+    doc.body.appendChild(canvasWrapper);
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
