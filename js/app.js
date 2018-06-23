@@ -98,6 +98,8 @@ class Enemy {
     * @description Detects collisions between enemies and player
     */
     detectCollision() {
+        if (gameProperties.collisionDetected) return;
+
         const OVERLAP_TOLERANCE = 4;
         const minX = player.x + player.padding + OVERLAP_TOLERANCE;
         const maxX = player.x + player.padding + player.width - OVERLAP_TOLERANCE;
@@ -118,9 +120,12 @@ class Enemy {
             }
 
             if (collision) {
+                gameProperties.collisionDetected = true;
+
                 // Let animation finish and reset player
                 setTimeout(function() {
                     player.reset();
+                    updatePoints(150, true); // Subtract 150 points for collision
                 }, 60);
             }
         }
@@ -246,10 +251,12 @@ class Player {
 
     /**
     * @description Checks the player's y position to see if he crossed road, sets new game level or 
-    * sets the won flag and displays the winning popup
+    * sets the won flag and displays the winning popup.
     */
     checkWin() {
         if (this.y < 0) {
+            updatePoints(500); // Add 500 points for winning the level
+
             if (gameProperties.level === gameProperties.maxLevel) {
                 this.won = true;
 
@@ -278,12 +285,13 @@ class Player {
 
 
     /**
-    * @description Resets player to initial position and clears the won flag
+    * @description Resets player to initial position, clears the won and collision flag
     */
     reset() {
         this.x = 2 * gameProperties.CELL_WIDTH;
         this.y = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
         this.won = false;
+        gameProperties.collisionDetected = false;
     }
 
 
@@ -464,6 +472,16 @@ function displayGameHeader() {
     });
     header.append(btn);
 
+    const pointsLabel = document.createElement('h2');
+    pointsLabel.innerText = 'Points: ';
+    pointsLabel.className = 'header-label';
+    header.append(pointsLabel);
+
+    const pointsIndicator = document.createElement('span');
+    pointsIndicator.innerText = '0';
+    pointsIndicator.id = 'points';
+    pointsLabel.append(pointsIndicator);
+
     const level = document.createElement('h2');
     level.innerText = 'Level ' + gameProperties.level;
     level.id = 'game-level-indicator';
@@ -471,6 +489,28 @@ function displayGameHeader() {
 
     const canvasWrapper = document.getElementById('canvas-wrapper');
     canvasWrapper.parentNode.insertBefore(header, canvasWrapper);
+}
+
+/**
+* @description Updates points and points label (subtract or add points)
+* @param {number} - points to add or subtract
+* @param {boolean} - subtract points
+*/
+function updatePoints(points = 100, subtract = false) {
+    if (subtract) {
+        gameProperties.points -= points;
+    } else {
+        gameProperties.points += points;
+    }
+
+    displayPoints();
+}
+
+/**
+* @description Displays the latest point status on screen
+*/
+function displayPoints() {
+    document.getElementById('points').innerHTML = gameProperties.points;
 }
 
 /**
@@ -487,7 +527,9 @@ function updateLevelIndicator() {
 function resetGame() {
     player.reset();
     gameProperties.level = 1;
+    gameProperties.points = 0;
     updateLevelIndicator();
+    displayPoints();
 
     // Remove all enemy instances
     allEnemies.forEach(enemy => { 
@@ -537,7 +579,9 @@ const gameProperties = (function() {
         SPRITE_PADDING: 20,
         popupVisible: false,
         level: 1,
-        maxLevel: 3
+        maxLevel: 3,
+        points: 0,
+        collisionDetected: false
     };
 
     return properties;
