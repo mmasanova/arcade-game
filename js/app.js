@@ -2,16 +2,25 @@
 /**
 * @description Represents an enemy that the player must avoid
 * @constructor
+* @param {string} sprite - image path for the enemy, this uses the helper class 
+* for cached images in resources.js and should match one of the strings cached there
+* @params {boolean} blocking - does the enemy block the player instead of taking his life?
 */
 class Enemy {
-    constructor() {
+    constructor(sprite = 'images/enemy-bug.png', blocking = false) {
         // The image/sprite for our enemies, this uses
         // a helper we've provided to easily load images
-        this.sprite = 'images/enemy-bug.png';
+        this.sprite = sprite;
         this.width = 99;
         this.padding = 1;
-        this.setSpeed();
         this.setPosition(true);
+        this.blocking = blocking;
+
+        if (blocking) {
+            this.speed = 0;
+        } else {
+            this.setSpeed();
+        }
     }
 
     /**
@@ -30,15 +39,20 @@ class Enemy {
     */
     render() {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-        this.detectCollision();
+
+        if (!this.blocking) this.detectCollision();
     }
 
     /**
-    * @description Resets enemy's position and speed
+    * @description Resets enemy's position and speed for non-static enemies
     */
     reset() {
-        this.setSpeed();
-        this.setPosition();
+        if (this.blocking) {
+            this.setPosition(true);
+        } else {
+            this.setSpeed();
+            this.setPosition();
+        }
     }
 
     /**
@@ -180,6 +194,7 @@ class Player {
     handleInput(direction) {
         if (gameProperties.popupVisible) return;
 
+        let blockMovement = false;
         let newY = this.y;
         let newX = this.x;
         const maxY = 5 * gameProperties.CELL_HEIGHT - gameProperties.SPRITE_PADDING;
@@ -211,11 +226,22 @@ class Player {
         if (newX < 0) newX = 0;
         if (newX > maxX) newX = maxX;
 
-        this.y = newY;
-        this.x = newX;
+        // Check if we have an obstacle enemy in the way
+        allEnemies.forEach(enemy => {
+            if (enemy.blocking) {
+                if (enemy.y === newY && enemy.x === newX) {
+                    blockMovement = true;
+                } 
+            }
+        });
 
-        // Check if player moved into the 'win' region on the other side of the road
-        this.checkWin();
+        if (!blockMovement) {
+            this.y = newY;
+            this.x = newX;
+
+            // Check if player moved into the 'win' region on the other side of the road
+            this.checkWin();
+        }
     }
 
     /**
@@ -235,7 +261,7 @@ class Player {
                         title: 'You Won!', 
                         content: content,
                         closeCallback: function() {
-                            player.reset();
+                            resetGame();
                         }
                     });
 
@@ -243,9 +269,9 @@ class Player {
                 }, 100);
             } else {
                 gameProperties.level += 1;
-                const levelIndicator = document.getElementById('game-level-indicator');
-                levelIndicator.innerText = 'Level ' + gameProperties.level;
+                updateLevelIndicator();
                 player.reset();
+                prepareLevel();
             }
         }
     }
@@ -447,6 +473,60 @@ function displayGameHeader() {
     canvasWrapper.parentNode.insertBefore(header, canvasWrapper);
 }
 
+/**
+* @description Updates level indicator with the current game level
+*/
+function updateLevelIndicator() {
+    const levelIndicator = document.getElementById('game-level-indicator');
+    levelIndicator.innerText = 'Level ' + gameProperties.level;
+}
+
+/**
+* @description Resets the game
+*/
+function resetGame() {
+    player.reset();
+    gameProperties.level = 1;
+    updateLevelIndicator();
+
+    // Remove all enemy instances
+    allEnemies.forEach(enemy => { 
+        enemy = null 
+    });
+
+    allEnemies = [];
+
+    prepareLevel();
+}
+
+/**
+* @description Prepares next game level
+*/
+function prepareLevel() {
+    // Reset static enemy position for each new level
+    if (gameProperties.level > 1) {
+        allEnemies.forEach(enemy => {
+            if (enemy.blocking) enemy.reset();
+        });
+    }
+
+    switch (gameProperties.level) {
+        case 2:
+        case 3:
+            const enemy = new Enemy('images/Rock.png', true);
+            allEnemies.push(enemy);
+            break;
+
+        default:
+            for (let enemyX = 0; enemyX < 3; enemyX++) {
+                const enemy = new Enemy();
+                allEnemies.push(enemy);
+            }
+
+            break;
+    }
+}
+
 // Game preparation
 
 // Game properties
@@ -470,10 +550,10 @@ const gameProperties = (function() {
 let allEnemies = [];
 const player = new Player();
 
-for (let enemyX = 0; enemyX < 3; enemyX++) {
-    const enemy = new Enemy();
-    allEnemies.push(enemy);
-}
+// Display the game header when page loads
+document.addEventListener("DOMContentLoaded", displayGameHeader);
+
+prepareLevel();
 
 // This listens for key presses and sends the keys to
 // Player.handleInput() method.
@@ -487,6 +567,3 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
-
-// Display the game header when page loads
-document.addEventListener("DOMContentLoaded", displayGameHeader);
