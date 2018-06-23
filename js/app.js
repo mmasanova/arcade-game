@@ -122,6 +122,8 @@ class Enemy {
             if (collision) {
                 gameProperties.collisionDetected = true;
 
+                updatePoints(150, true); // Subtract 150 points on collision
+
                 // Let animation finish and reset player
                 setTimeout(function() {
                     player.reset();
@@ -272,7 +274,7 @@ class Player {
 
                 setTimeout(function() {
                     const content = document.createElement('text');
-                    content.innerText = 'Congratulations you won!';
+                    content.innerText = 'Congratulations you won with ' + gameProperties.points + ' points!';
 
                     const popup = new Popup({ 
                         title: 'You Won!', 
@@ -378,7 +380,7 @@ class Collectible {
 * @param {function} closeCallback - The callback function to call when popup is closed
 */
 class Popup {
-    constructor({width = 300, height = 'auto', id = 'popup', title = 'Title', content = '', closeCallback} = {}) {
+    constructor({width = 320, height = 'auto', id = 'popup', title = 'Title', content = '', closeCallback} = {}) {
         this.id = id;
         this.width = width + 'px';
         this.height = height + 'px';
@@ -590,6 +592,8 @@ function displayGameHeader() {
 function updatePoints(points = 100, subtract = false) {
     if (subtract) {
         gameProperties.points -= points;
+
+        if (gameProperties.points < 0) gameProperties.points = 0;
     } else {
         gameProperties.points += points;
     }
