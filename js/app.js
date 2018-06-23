@@ -1,10 +1,8 @@
 
 /**
-* @description Represents an enemy
+* @description Represents an enemy that the player must avoid
 * @constructor
 */
-
-// Enemies our player must avoid
 class Enemy {
     constructor() {
         // The image/sprite for our enemies, this uses
@@ -122,7 +120,7 @@ class Enemy {
 
 class Player {
     constructor() {
-        this.sprite = 'images/char-boy.png'
+        this.sprite = 'images/char-boy.png';
         this.width = 65;
         this.padding = 18;
         this.reset();
@@ -267,6 +265,16 @@ class Player {
     }
 }
 
+/**
+* @description Represents a popup
+* @constructor
+* @param {number} width - The width of the popup
+* @param {number} height - The height of the popup
+* @param {string} id - The id of the popup
+* @param {string} title - The title of the popup
+* @param {object} content - Element or document fragment to display as content of the popup
+* @param {function} closeCallback - The callback function to call when popup is closed
+*/
 class Popup {
     constructor({width = 300, height = 'auto', id = 'popup', title = 'Title', content = '', closeCallback} = {}) {
         this.id = id;
@@ -274,18 +282,18 @@ class Popup {
         this.height = height + 'px';
         this.title = title;
         this.content = content;
-        this.closeCallback = closeCallback
+        this.closeCallback = closeCallback;
     }
 
+    /**
+    * @description Renders popup on the screen
+    */
     display() {
         const thisPopup = this;
         const popupWrapper = document.createElement('div');
         popupWrapper.id = 'popup-wrapper';
         popupWrapper.className = 'popup-wrapper';
         popupWrapper.style.zIndex = 0;
-        // popupWrapper.onclick = function() {
-        //     thisPopup.close();
-        // }
 
         const popup = document.createElement('div');
         popup.id = this.id;
@@ -300,14 +308,12 @@ class Popup {
 
         const ok = document.createElement('button');
         ok.innerText = 'OK';
-        ok.id = 'set-player-sprite';
+        ok.id = 'popup-submit';
         ok.className = 'btn btn-raised';
         ok.addEventListener('click', function() {
             if (typeof thisPopup.closeCallback === 'function') thisPopup.closeCallback();
             thisPopup.close();
         });
-
-        console.log(this.content, '....');
 
         popup.append(this.content);
         popup.append(ok);
@@ -316,6 +322,9 @@ class Popup {
         gameProperties.popupVisible = true;
     }
 
+    /**
+    * @description Removes/closes the popup
+    */
     close() {
         document.getElementById(this.id).remove();
         document.getElementById('popup-wrapper').remove();
@@ -323,8 +332,13 @@ class Popup {
     }
 }
 
+/**
+* @description Represents a character switch control, creates a document fragment with this control
+* @constructor
+*/
 class CharacterSwitch {
     constructor() {
+        // Array of available character sprites, helper class in resources.js is used to cache these
         this.sprites = [
             'images/char-boy.png',
             'images/char-cat-girl.png',
@@ -369,6 +383,11 @@ class CharacterSwitch {
         this.imageIndex = 0;
     }
 
+    /**
+    * @description Switches the character sprite currently visible in the character 
+    * switch control to previous or next one available
+    * @param {boolean} previous - Show previous sprite?
+    */
     switchCharacter(previous) {
         if (previous) {
             this.imageIndex -= 1;
@@ -387,10 +406,37 @@ class CharacterSwitch {
     }
 }
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
+/**
+* @description Displays game header which contains the 'Change Character' option
+*/
+function displayGameHeader() {
+    const header = document.createElement('div');
+    header.id = 'header';
 
+    const btn = document.createElement('button');
+    btn.id = 'changeCharacter';
+    btn.innerText = 'Change Character';
+    btn.className = 'btn btn-raised';
+    btn.addEventListener('click', function() {
+        const characterSwitch = new CharacterSwitch();
+        const popup = new Popup({ 
+            title: 'Change Character', 
+            content: characterSwitch.documentFragment,
+            closeCallback: function() {
+                player.setCharacter(characterSwitch.sprites[characterSwitch.imageIndex]);
+            }
+        });
+
+        popup.display();
+    });
+
+    header.append(btn);
+    document.body.prepend(header);
+}
+
+// Game preparation
+
+// Game properties
 const gameProperties = (function() {
     const properties = {
         CELL_WIDTH: 101,
@@ -402,6 +448,10 @@ const gameProperties = (function() {
     return properties;
 })();
 
+// Objects are instantiated
+// Places all enemy objects in an array called allEnemies
+// Places the player object in a variable called player
+
 let allEnemies = [];
 const player = new Player();
 
@@ -410,30 +460,8 @@ for (let enemyX = 0; enemyX < 3; enemyX++) {
     allEnemies.push(enemy);
 }
 
-const header = document.createElement('div');
-header.id = 'header';
-
-const btn = document.createElement('button');
-btn.id = 'changeCharacter';
-btn.innerText = 'Change Character';
-btn.className = 'btn btn-raised';
-btn.addEventListener('click', function() {
-    const characterSwitch = new CharacterSwitch();
-    const popup = new Popup({ 
-        title: 'Change Character', 
-        content: characterSwitch.documentFragment,
-        closeCallback: function() {
-            player.setCharacter(characterSwitch.sprites[characterSwitch.imageIndex]);
-        }
-    });
-    popup.display();
-});
-
-header.append(btn);
-document.body.prepend(header);
-
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
+// This listens for key presses and sends the keys to
+// Player.handleInput() method.
 document.addEventListener('keyup', function(e) {
     var allowedKeys = {
         37: 'left',
@@ -444,3 +472,6 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
+
+// Display the game header
+displayGameHeader();
