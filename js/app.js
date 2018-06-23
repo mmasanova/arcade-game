@@ -84,9 +84,9 @@ class Enemy {
                 x = -gameProperties.CELL_WIDTH;
             }
 
-            const existingPosition = allEnemies.find((enemy) => enemy.x === x && enemy.y === y);
+            const positionExists = checkPositionExists(x, y);
 
-            if (existingPosition === undefined) {
+            if (!positionExists) {
                 this.x = x;
                 this.y = y;
                 positionFound = true;
@@ -125,7 +125,6 @@ class Enemy {
                 // Let animation finish and reset player
                 setTimeout(function() {
                     player.reset();
-                    updatePoints(150, true); // Subtract 150 points for collision
                 }, 60);
             }
         }
@@ -136,7 +135,6 @@ class Enemy {
 * @description Represents the main player
 * @constructor
 */
-
 class Player {
     constructor() {
         this.sprite = 'images/char-boy.png';
@@ -240,6 +238,18 @@ class Player {
             }
         });
 
+        // Check if we have a collectible here
+        for (let itemX = 0; itemX < allCollectibles.length; itemX++) {
+            let item = allCollectibles[itemX];
+
+            if (item.y === newY && item.x === newX) {
+                item.pickUp();
+                item = null;
+                allCollectibles.splice(itemX, 1);
+                break;
+            }  
+        }
+
         if (!blockMovement) {
             this.y = newY;
             this.x = newX;
@@ -303,6 +313,57 @@ class Player {
     */
     setCharacter(sprite = 'images/char-boy.png') {
         this.sprite = sprite;
+    }
+}
+
+/**
+* @description Represents a collectible
+* @constructor
+* @param {string} sprite - The width of the popup
+* @param {number} points - Number of points that player gains when they pick up the item
+*/
+class Collectible {
+    constructor({sprite = 'images/Gem Orange.png', points = 100} = {}) {
+        this.sprite = sprite;
+        this.points = points;
+        this.setPosition();
+    }
+
+    /**
+    * @description Draws the item on the screen
+    */
+    render() {
+        ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    }
+
+    /**
+    * @description Sets unique random position for the collectible item
+    */
+    setPosition() {
+        let positionFound = false;
+
+        while (!positionFound) {
+            const row = Math.floor(Math.random() * 3) + 1;
+            const y = (row * gameProperties.CELL_HEIGHT) - gameProperties.SPRITE_PADDING;
+
+            const col = Math.floor(Math.random() * 4);
+            const x = col * gameProperties.CELL_WIDTH;
+
+            const positionExists = checkPositionExists(x, y);
+
+            if (!positionExists) {
+                this.x = x;
+                this.y = y;
+                positionFound = true;
+            }
+        }
+    }
+
+    /**
+    * @description Adds item's points to game points
+    */
+    pickUp() {
+        updatePoints(this.points);
     }
 }
 
@@ -448,6 +509,36 @@ class CharacterSwitch {
 }
 
 /**
+* @description Checks if provided position on the road is already occupied
+* @param {number} x - x position
+* @param {number} y - y position
+* @returns {boolean} - position exists
+*/
+function checkPositionExists(x, y) {
+    let existingPosition = false;
+
+    for (let enemyX = 0; enemyX < allEnemies.length; enemyX++) {
+        if (allEnemies[enemyX].x === x && allEnemies[enemyX].y === y) {
+            existingPosition = true;
+            break;
+        }
+    }
+
+    if (!existingPosition) {
+        for (let itemX = 0; itemX < allCollectibles.length; itemX++) {
+            const item = allCollectibles[itemX];
+
+            if (item.x === x && item.y === y) {
+                existingPosition = true;
+                break;
+            }
+        }
+    }
+
+    return existingPosition;
+}
+
+/**
 * @description Displays game header which contains the 'Change Character' option
 */
 function displayGameHeader() {
@@ -545,18 +636,38 @@ function resetGame() {
 * @description Prepares next game level
 */
 function prepareLevel() {
+    let noRocks = 0;
+    let noDiamonds = 0;
+    let currentNoRocks = 0;
+
+    // Remove collectibles
+    allCollectibles.forEach(item => {
+        item = null;
+    });
+
+    allCollectibles = [];
+
     // Reset static enemy position for each new level
     if (gameProperties.level > 1) {
         allEnemies.forEach(enemy => {
-            if (enemy.blocking) enemy.reset();
+            if (enemy.blocking) {
+                enemy.reset();
+                currentNoRocks += 1;
+            }
         });
     }
-
+    
     switch (gameProperties.level) {
         case 2:
+            noRocks = 1;
+            noDiamonds = 1;
+
+            break;
+
         case 3:
-            const enemy = new Enemy('images/Rock.png', true);
-            allEnemies.push(enemy);
+            noRocks = 2;
+            noDiamonds = 2;
+
             break;
 
         default:
@@ -566,6 +677,18 @@ function prepareLevel() {
             }
 
             break;
+    }
+
+    noRocks -= currentNoRocks;
+
+    for (let rockX = 0; rockX < noRocks; rockX++) {
+        const enemy = new Enemy('images/Rock.png', true);
+        allEnemies.push(enemy);
+    }
+
+    for (let itemX = 0; itemX < noDiamonds; itemX++) {
+        const collectible = new Collectible();
+        allCollectibles.push(collectible);
     }
 }
 
@@ -592,6 +715,7 @@ const gameProperties = (function() {
 // Places the player object in a variable called player
 
 let allEnemies = [];
+let allCollectibles = [];
 const player = new Player();
 
 // Display the game header when page loads
