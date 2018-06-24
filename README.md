@@ -5,7 +5,7 @@ An arcade game based on the classic Frogger game.
 ## How to run ##
 Clone the repository and open the index.html file in one of the modern browsers that support ES6 syntax (polyfils for other browsers have not yet been included in the game). Such browsers include e.g. Chrome, Safari, Firefox.
 
-Alternatively, use the following link to play the game: https://mmasanova.github.io/arcade-game/
+Alternatively, play the game [here](https://mmasanova.github.io/arcade-game/).
 
 ## How to play the game ##
 
