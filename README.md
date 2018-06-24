@@ -42,6 +42,7 @@ The button on the top left with title 'Change Character' can be used to change t
 ## Future Enhancements ##
 
 Add Babel for ES6 support accross more browsers
+
 Refactor the code into single IFFE or modules
 
 ## Dependencies ##
