@@ -39,5 +39,10 @@ In order to win all three levels need to be completed. On completion of all leve
 
 The button on the top left with title 'Change Character' can be used to change the look of the main character. There are 5 different options. To change the character, click the button and you will be presented with a popup. Use the arrows on the sides of the character to navigate to previous and next option. When you are happy with the look of your character press 'OK' and the selected character will appear as the main character.
 
+## Future Enhancements ##
+
+Add Babel for ES6 support accross more browsers
+Refactor the code into single IFFE or modules
+
 ## Dependencies ##
 ES6 https://developer.mozilla.org/en-US/docs/Web/JavaScript/New_in_JavaScript/ECMAScript_2015_support_in_Mozilla
